@@ -1,12 +1,6 @@
-[package]
-name = "wgpu-voxel-game"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-env_logger = "0.10.0"
-log = "0.4.0"
-wgpu = "0.15.1"
-winit = "0.28.1"
+[workspace]
+resolver = "2" # For some reason, this is still needed for macOS on the 2021 edition
+members = [
+    "game",
+    "graphics"
+]
