@@ -5,7 +5,7 @@ use winit::{window::Window, event::WindowEvent, dpi::PhysicalSize};
 use crate::{INDICES, Vertex, VERTICES};
 use crate::texture::Texture;
 
-pub(crate) struct State {
+pub(crate) struct Renderer {
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -21,18 +21,18 @@ pub(crate) struct State {
     window: Window,
 }
 
-impl State {
+impl Renderer {
     // Creating some of the wgpu types requires async code
     pub(crate) async fn new(window: Window) -> Self {
         let size: PhysicalSize<u32>  = window.inner_size();
 
-        let instance: Instance = State::create_instance();
+        let instance: Instance = Renderer::create_instance();
 
-        let surface: Surface = State::create_surface(&window, &instance);
+        let surface: Surface = Renderer::create_surface(&window, &instance);
 
-        let adapter: Adapter = State::create_adapter(&instance, &surface).await;
+        let adapter: Adapter = Renderer::create_adapter(&instance, &surface).await;
 
-        let (device, queue) = State::create_dev_queue(&adapter).await;
+        let (device, queue) = Renderer::create_dev_queue(&adapter).await;
 
         let surface_caps = surface.get_capabilities(&adapter);
         
@@ -270,7 +270,7 @@ impl State {
             });
 
             render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]); // NEW!
+            render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
