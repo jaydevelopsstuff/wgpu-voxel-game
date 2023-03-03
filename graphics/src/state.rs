@@ -2,7 +2,7 @@ use log::{info, debug};
 use wgpu::{Instance, Surface, Adapter, Device, Queue};
 use wgpu::util::DeviceExt;
 use winit::{window::Window, event::WindowEvent, dpi::PhysicalSize};
-use crate::{Vertex, VERTICES};
+use crate::{INDICES, Vertex, VERTICES};
 
 pub(crate) struct State {
     surface: wgpu::Surface,
@@ -13,6 +13,8 @@ pub(crate) struct State {
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     num_vertices: u32,
+    index_buffer: wgpu::Buffer,
+    num_indices: u32,
     window: Window,
 }
 
@@ -105,7 +107,16 @@ impl State {
             }
         );
 
+        let index_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(INDICES),
+                usage: wgpu::BufferUsages::INDEX,
+            }
+        );
+
         let num_vertices = VERTICES.len() as u32;
+        let num_indices = INDICES.len() as u32;
 
         Self {
             window,
@@ -116,7 +127,9 @@ impl State {
             size,
             render_pipeline,
             vertex_buffer,
-            num_vertices
+            num_vertices,
+            index_buffer,
+            num_indices,
         }
     }
 
@@ -207,7 +220,8 @@ impl State {
 
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.draw(0..self.num_vertices, 0..1);
+            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
         }
     
         // submit will accept anything that implements IntoIter
