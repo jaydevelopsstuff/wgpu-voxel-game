@@ -2,16 +2,16 @@ use state::State;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
+    window::{WindowBuilder, Window},
 };
 
 mod state;
 
 pub async fn run() {
-    let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let event_loop: EventLoop<()> = EventLoop::new();
+    let window: Window = WindowBuilder::new().build(&event_loop).unwrap();
 
-    let mut state = State::new(window).await;
+    let mut state: State = State::new(window).await;
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -42,6 +42,7 @@ pub async fn run() {
                     }
                 }
             }
+
             Event::RedrawRequested(window_id) if window_id == state.window().id() => {
                 state.update();
                 match state.render() {
@@ -54,6 +55,7 @@ pub async fn run() {
                     Err(wgpu::SurfaceError::Timeout) => log::warn!("Surface timeout"),
                 }
             }
+            
             Event::RedrawEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
                 // request it.
