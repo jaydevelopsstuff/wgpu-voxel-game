@@ -1,3 +1,4 @@
+use std::time::Instant;
 use renderer::Renderer;
 use wgpu::util::DeviceExt;
 use winit::{
@@ -12,6 +13,7 @@ mod texture;
 mod graphics;
 mod pipeline;
 mod vertex;
+mod camera;
 
 const VERTICES: &[Vertex] = &[
     Vertex { position: [-0.0868241, 0.49240386, 0.0], tex_coords: [0.4131759, 0.00759614], },
@@ -33,8 +35,15 @@ pub async fn run() {
 
     let mut state: Renderer = Renderer::new(window).await;
 
+    let mut last_render_time = Instant::now();
     event_loop.run(move |event, _, control_flow| {
         match event {
+            Event::DeviceEvent {
+                event: winit::event::DeviceEvent::MouseMotion{ delta, },
+                .. // We're not using device_id currently
+            } => if state.mouse_pressed {
+                state.camera_controller.process_mouse(delta.0, delta.1)
+            }
             Event::WindowEvent {
                 ref event,
                 window_id,
@@ -52,11 +61,11 @@ pub async fn run() {
                             ..
                         } => *control_flow = ControlFlow::Exit,
                         WindowEvent::Resized(physical_size) => {
-                            state.graphics.resize(*physical_size);
+                            state.resize(*physical_size);
                         }
                         WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
                             // new_inner_size is &&mut so w have to dereference it twice
-                            state.graphics.resize(**new_inner_size);
+                            state.resize(**new_inner_size);
                         }
                         _ => {}
                     }
@@ -64,18 +73,21 @@ pub async fn run() {
             }
 
             Event::RedrawRequested(window_id) if window_id == state.window().id() => {
-                state.update();
+                let now = Instant::now();
+                let dt = now - last_render_time;
+                last_render_time = now;
+                state.update(dt);
                 match state.render() {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
-                    Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.graphics.resize(state.graphics.size),
+                    Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.graphics.size),
                     // The system is out of memory, we should probably quit
                     Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                    
+
                     Err(wgpu::SurfaceError::Timeout) => log::warn!("Surface timeout"),
                 }
             }
-            
+
             Event::RedrawEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
                 // request it.
