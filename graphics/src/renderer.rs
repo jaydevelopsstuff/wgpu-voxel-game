@@ -8,7 +8,7 @@ use crate::texture::Texture;
 use wgpu::util::DeviceExt;
 use winit::{window::Window, event::WindowEvent, dpi::PhysicalSize};
 use winit::event::{ElementState, KeyboardInput, MouseButton};
-use crate::{INDICES, quad, Vertex, VERTICES};
+use crate::{quad, Vertex};
 use crate::camera::{Camera, CameraController, CameraUniform};
 use crate::coord::{Coord3DF, Coord3DI};
 use crate::graphics::Graphics;
@@ -91,14 +91,14 @@ impl Renderer {
 
         let mut instances = vec![];
 
-        for i in 0..10 {
-            for j in 0..10 {
-                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + 0.0, 0.0, (j * 2) as f32 + 0.5), Rotation::Front, 0));
-                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + 0.0, 0.0, (j * 2) as f32 + -0.5), Rotation::Back, 0));
-                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + -0.5, 0.0, (j * 2) as f32 + 0.0), Rotation::Left, 0));
-                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + 0.5, 0.0, (j * 2) as f32 + 0.0), Rotation::Right, 0));
-                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + 0.0, 0.5, (j * 2) as f32 + 0.0), Rotation::Up, 1));
-                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + 0.0, -0.5, (j * 2) as f32 + 0.0), Rotation::Down, 2));
+        for i in 0..50 {
+            for j in 0..50 {
+                instances.push(Quad::new(Coord3DF::new((i) as f32 + 0.0, 0.0, (j) as f32 + 0.5), Rotation::Front, 0));
+                instances.push(Quad::new(Coord3DF::new((i) as f32 + 0.0, 0.0, (j) as f32 + -0.5), Rotation::Back, 0));
+                instances.push(Quad::new(Coord3DF::new((i) as f32 + -0.5, 0.0, (j) as f32 + 0.0), Rotation::Left, 0));
+                instances.push(Quad::new(Coord3DF::new((i) as f32 + 0.5, 0.0, (j) as f32 + 0.0), Rotation::Right, 0));
+                instances.push(Quad::new(Coord3DF::new((i) as f32 + 0.0, 0.5, (j) as f32 + 0.0), Rotation::Up, 1));
+                instances.push(Quad::new(Coord3DF::new((i) as f32 + 0.0, -0.5, (j) as f32 + 0.0), Rotation::Down, 2));
             }
         }
 
