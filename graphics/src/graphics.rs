@@ -1,3 +1,5 @@
+use wgpu::Features;
+
 pub struct Graphics {
     pub surface: wgpu::Surface,
     pub device: wgpu::Device,
@@ -25,7 +27,7 @@ impl Graphics {
         let (device, queue) = adapter.request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                features: wgpu::Features::empty(),
+                features: Features::TEXTURE_BINDING_ARRAY | Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
                 limits: wgpu::Limits::default()
             },
             None,

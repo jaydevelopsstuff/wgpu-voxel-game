@@ -1,18 +1,20 @@
+use std::num::NonZeroU32;
 use std::time::Duration;
 use log::{info, debug};
 use nalgebra::{Quaternion, Rotation3, Translation3, Vector3};
 use wgpu::{Instance, Surface, Adapter, Device, Queue, Face};
+use wgpu::BindingResource::TextureViewArray;
+use crate::texture::Texture;
 use wgpu::util::DeviceExt;
 use winit::{window::Window, event::WindowEvent, dpi::PhysicalSize};
 use winit::event::{ElementState, KeyboardInput, MouseButton};
 use crate::{INDICES, quad, Vertex, VERTICES};
 use crate::camera::{Camera, CameraController, CameraUniform};
-use crate::coord::Coord3DI;
+use crate::coord::{Coord3DF, Coord3DI};
 use crate::graphics::Graphics;
 use crate::instance::InstanceRaw;
 use crate::pipeline::Pipeline;
 use crate::quad::{Quad, Rotation};
-use crate::texture::Texture;
 
 pub(crate) struct Renderer {
     window: Window,
@@ -24,6 +26,7 @@ pub(crate) struct Renderer {
     num_indices: u32,
     diffuse_bind_group: wgpu::BindGroup,
     diffuse_texture: Texture,
+    depth_texture: Texture,
     pub camera: Camera,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
@@ -38,8 +41,11 @@ impl Renderer {
     pub(crate) async fn new(window: Window) -> Self {
         let graphics = Graphics::new(&window).await;
 
-        let diffuse_bytes = include_bytes!("assets/grass_block_side.png");
-        let diffuse_texture = Texture::from_bytes(&graphics.device, &graphics.queue, diffuse_bytes, "grass_block_side.png").unwrap();
+        let grass_side_diffuse_texture = Texture::from_bytes(&graphics.device, &graphics.queue, include_bytes!("assets/grass_block_side.png"), "grass_block_side.png").unwrap();
+        let grass_top_diffuse_texture = Texture::from_bytes(&graphics.device, &graphics.queue, include_bytes!("assets/grass_block_top.png"), "grass_block_top.png").unwrap();
+        let dirt_diffuse_texture = Texture::from_bytes(&graphics.device, &graphics.queue, include_bytes!("assets/dirt.png"), "dirt.png").unwrap();
+
+        let depth_texture = Texture::create_depth_texture(&graphics.device, &graphics.config, "depth_texture");
 
         // START CAMERA
         let camera = Camera::new(&graphics);
@@ -83,7 +89,18 @@ impl Renderer {
         // END CAMERA
 
 
-        let instances = vec![Quad::new(Coord3DI::new(0, -2, 0), Rotation::Front, 0), Quad::new(Coord3DI::new(0, -2, 0), Rotation::Up, 0)];
+        let mut instances = vec![];
+
+        for i in 0..10 {
+            for j in 0..10 {
+                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + 0.0, 0.0, (j * 2) as f32 + 0.5), Rotation::Front, 0));
+                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + 0.0, 0.0, (j * 2) as f32 + -0.5), Rotation::Back, 0));
+                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + -0.5, 0.0, (j * 2) as f32 + 0.0), Rotation::Left, 0));
+                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + 0.5, 0.0, (j * 2) as f32 + 0.0), Rotation::Right, 0));
+                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + 0.0, 0.5, (j * 2) as f32 + 0.0), Rotation::Up, 1));
+                instances.push(Quad::new(Coord3DF::new((i * 2) as f32 + 0.0, -0.5, (j * 2) as f32 + 0.0), Rotation::Down, 2));
+            }
+        }
 
         let instance_data = instances.iter().map(|instance| -> InstanceRaw { instance.to_raw() }).collect::<Vec<_>>();
         let instance_buffer = graphics.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -98,21 +115,21 @@ impl Renderer {
                     wgpu::BindGroupLayoutEntry {
                         binding: 0,
                         visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            multisampled: false,
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        },
-                        count: None,
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
                         // This should match the filterable field of the
                         // corresponding Texture entry above.
                         ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                         count: None,
                     },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: NonZeroU32::new(3),
+                    }
                 ],
                 label: Some("texture_bind_group_layout"),
             });
@@ -123,11 +140,11 @@ impl Renderer {
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&diffuse_texture.view)
+                        resource: wgpu::BindingResource::Sampler(&grass_side_diffuse_texture.sampler)
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
-                        resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler)
+                        resource: wgpu::BindingResource::TextureViewArray(vec![&grass_side_diffuse_texture.view, &grass_top_diffuse_texture.view, &dirt_diffuse_texture.view].as_ref())
                     }
                 ],
                 label: Some("diffuse_bind_group")
@@ -179,7 +196,8 @@ impl Renderer {
             index_buffer,
             num_indices,
             diffuse_bind_group,
-            diffuse_texture,
+            diffuse_texture: grass_side_diffuse_texture,
+            depth_texture,
             camera,
             camera_uniform,
             camera_buffer,
@@ -227,6 +245,7 @@ impl Renderer {
             self.graphics.config.width = new_size.width;
             self.graphics.config.height = new_size.height;
             self.camera.resize(&self.graphics);
+            self.depth_texture = Texture::create_depth_texture(&self.graphics.device, &self.graphics.config, "depth_texture");
             self.graphics.surface.configure(&self.graphics.device, &self.graphics.config);
         }
     }
@@ -266,7 +285,14 @@ impl Renderer {
                         store: true,
                     },
                 })],
-                depth_stencil_attachment: None,
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_texture.view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: true,
+                    }),
+                    stencil_ops: None,
+                }),
             });
 
             render_pass.set_pipeline(&self.render_pipeline.pipeline);

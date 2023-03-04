@@ -17,53 +17,7 @@ mod camera;
 mod quad;
 mod coord;
 mod instance;
-
-/*const VERTICES: &[Vertex] = &[
-    Vertex { position: [-0.0168241, 0.49240386, 0.0], tex_coords: [0.4131759, 0.00759614], },
-    Vertex { position: [-0.49513406, 0.06958647, 0.0], tex_coords: [0.0048659444, 0.43041354], },
-    Vertex { position: [-0.21918549, -0.44939706, 0.0], tex_coords: [0.28081453, 0.949397], },
-    Vertex { position: [0.35966998, -0.3473291, 0.0], tex_coords: [0.85967, 0.84732914], },
-    Vertex { position: [0.44147372, 0.2347359, 0.0], tex_coords: [0.9414737, 0.2652641], }
-];
-
-const INDICES: &[u16] = &[
-    0, 1, 4,
-    1, 2, 4,
-    2, 3, 4
-];*/
-
-/*const VERTICES: &[Vertex] = &[
-    // TL
-    Vertex { position: [-0.5, 0.5, 0.0], tex_coords: [0.0, 0.0], },
-    // TR
-    Vertex { position: [0.5, 0.5, 0.0], tex_coords: [1.0, 0.0], },
-    // BL
-    Vertex { position: [-0.5, -0.5, 0.0], tex_coords: [0.0, 1.0], },
-    // BR
-    Vertex { position: [0.5, -0.5, 0.0], tex_coords: [1.0, 1.0], }
-];
-
-const INDICES: &[u16] = &[
-    0, 1, 2,
-    3, 2, 1
-];*/
-
-
-const VERTICES: &[Vertex] = &[
-    // TL
-    Vertex { position: [-0.5, 0.5, 0.0], tex_coords: [0.0, 0.0] },
-    // TR
-    Vertex { position: [0.5, 0.5, 0.0], tex_coords: [1.0, 0.0] },
-    // BL
-    Vertex { position: [-0.5, -0.5, 0.0], tex_coords: [0.0, 1.0] },
-    // BR
-    Vertex { position: [0.5, -0.5, 0.0], tex_coords: [1.0, 1.0] }
-];
-
-const INDICES: &[u16] = &[
-    0, 2, 3,
-    3, 1, 0
-];
+mod cube;
 
 pub async fn run() {
     let event_loop: EventLoop<()> = EventLoop::new();

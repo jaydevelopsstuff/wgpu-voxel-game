@@ -1,5 +1,6 @@
 use crate::graphics::Graphics;
 use crate::instance::InstanceRaw;
+use crate::texture::Texture;
 
 pub struct Pipeline {
     pub pipeline: wgpu::RenderPipeline
@@ -14,6 +15,7 @@ impl Pipeline {
         vertex_layout: wgpu::VertexBufferLayout,
         layout: Option<&wgpu::PipelineLayout>
     ) -> Self {
+        // Consider reading shaders at runtime?
         let shader = graphics.device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some(&format!("{} shader", shader_label)),
             source: wgpu::ShaderSource::Wgsl(shader_content.into()),
@@ -48,7 +50,13 @@ impl Pipeline {
                 // Requires Features::CONSERVATIVE_RASTERIZATION
                 conservative: false
             },
-            depth_stencil: None, // Is this OK?
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: Texture::DEPTH_FORMAT,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less, // 1.
+                stencil: wgpu::StencilState::default(), // 2.
+                bias: wgpu::DepthBiasState::default(),
+            }),
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,

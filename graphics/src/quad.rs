@@ -1,5 +1,5 @@
 use nalgebra::{Rotation3, Translation3};
-use crate::coord::Coord3DI;
+use crate::coord::{Coord3DF, Coord3DI};
 use crate::instance::InstanceRaw;
 use crate::vertex::Vertex;
 
@@ -27,7 +27,7 @@ pub struct Quad {
 }
 
 impl Quad  {
-    pub fn new(pos: Coord3DI, facing: Rotation, texture_index: u32) -> Self {
+    pub fn new(pos: Coord3DF, facing: Rotation, texture_index: u32) -> Self {
         let rotation: Rotation3<f32>;
         match facing {
             Rotation::Up => {
