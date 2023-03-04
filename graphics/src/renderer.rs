@@ -4,10 +4,11 @@ use wgpu::{Instance, Surface, Adapter, Device, Queue};
 use wgpu::util::DeviceExt;
 use winit::{window::Window, event::WindowEvent, dpi::PhysicalSize};
 use winit::event::{ElementState, KeyboardInput, MouseButton};
-use crate::{INDICES, Vertex, VERTICES};
-use crate::camera::{Camera, CameraController, CameraUniform, Projection};
+use crate::{INDICES, quad, Vertex, VERTICES};
+use crate::camera::{Camera, CameraController, CameraUniform};
 use crate::graphics::Graphics;
 use crate::pipeline::Pipeline;
+use crate::quad::Quad;
 use crate::texture::Texture;
 
 pub(crate) struct Renderer {
@@ -20,12 +21,10 @@ pub(crate) struct Renderer {
     num_indices: u32,
     diffuse_bind_group: wgpu::BindGroup,
     diffuse_texture: Texture,
-    camera: Camera,
+    pub camera: Camera,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
-    projection: Projection,
-    pub(crate) camera_controller: CameraController,
     pub(crate) mouse_pressed: bool
 }
 
@@ -34,8 +33,50 @@ impl Renderer {
     pub(crate) async fn new(window: Window) -> Self {
         let graphics = Graphics::new(&window).await;
 
-        let diffuse_bytes = include_bytes!("assets/tree.png");
-        let diffuse_texture = Texture::from_bytes(&graphics.device, &graphics.queue, diffuse_bytes, "tree.png").unwrap();
+        let diffuse_bytes = include_bytes!("assets/grass_block_side.png");
+        let diffuse_texture = Texture::from_bytes(&graphics.device, &graphics.queue, diffuse_bytes, "grass_block_side.png").unwrap();
+
+        // START CAMERA
+        let camera = Camera::new(&graphics);
+        let mut camera_uniform = CameraUniform::new();
+        camera_uniform.update_view_proj(&camera);
+
+        let camera_buffer = graphics.device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Camera Buffer"),
+                contents: bytemuck::cast_slice(&[camera_uniform]),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
+            }
+        );
+
+        let camera_bind_group_layout = graphics.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }
+            ],
+            label: Some("camera_bind_group_layout"),
+        });
+
+        let camera_bind_group = graphics.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &camera_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: camera_buffer.as_entire_binding(),
+                }
+            ],
+            label: Some("camera_bind_group"),
+        });
+        // END CAMERA
+
 
         let texture_bind_group_layout =
             graphics.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -80,37 +121,6 @@ impl Renderer {
         );
 
 
-        let camera = Camera::new((0.0, 2.0, 10.0), cgmath::Deg(-90.0), cgmath::Deg(-20.0));
-        let projection = Projection::new(graphics.config.width, graphics.config.height, cgmath::Deg(45.0), 0.1, 100.0);
-        let camera_controller = CameraController::new(4.0, 0.4);
-        let mut camera_uniform = CameraUniform::new();
-        camera_uniform.update_view_proj(&camera, &projection);
-
-        let camera_buffer = graphics.device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Camera Buffer"),
-                contents: bytemuck::cast_slice(&[camera_uniform]),
-                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
-            }
-        );
-
-        let camera_bind_group_layout = graphics.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                }
-            ],
-            label: Some("camera_bind_group_layout"),
-        });
-
-
         let render_pipeline_layout = graphics.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
             bind_group_layouts: &[&texture_bind_group_layout, &camera_bind_group_layout],
@@ -129,7 +139,7 @@ impl Renderer {
         let vertex_buffer = graphics.device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(VERTICES),
+                contents: bytemuck::cast_slice(quad::VERTICES),
                 usage: wgpu::BufferUsages::VERTEX
             }
         );
@@ -137,24 +147,13 @@ impl Renderer {
         let index_buffer = graphics.device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(INDICES),
+                contents: bytemuck::cast_slice(quad::INDICES),
                 usage: wgpu::BufferUsages::INDEX,
             }
         );
 
-        let num_vertices = VERTICES.len() as u32;
-        let num_indices = INDICES.len() as u32;
-
-        let camera_bind_group = graphics.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &camera_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: camera_buffer.as_entire_binding(),
-                }
-            ],
-            label: Some("camera_bind_group"),
-        });
+        let num_vertices = quad::VERTICES.len() as u32;
+        let num_indices = quad::INDICES.len() as u32;
 
 
         Self {
@@ -171,8 +170,6 @@ impl Renderer {
             camera_uniform,
             camera_buffer,
             camera_bind_group,
-            projection,
-            camera_controller,
             mouse_pressed: false
         }
     }
@@ -191,9 +188,9 @@ impl Renderer {
                     ..
                 },
                 ..
-            } => self.camera_controller.process_keyboard(*key, *state),
+            } => self.camera.controller.process_keyboard_input(state, Some(*key)),
             WindowEvent::MouseWheel { delta, .. } => {
-                self.camera_controller.process_scroll(delta);
+                self.camera.controller.process_mouse_wheel(delta);
                 true
             }
             WindowEvent::MouseInput {
@@ -213,14 +210,14 @@ impl Renderer {
             self.graphics.size = new_size;
             self.graphics.config.width = new_size.width;
             self.graphics.config.height = new_size.height;
-            self.projection.resize(new_size.width, new_size.height);
+            self.camera.resize(&self.graphics);
             self.graphics.surface.configure(&self.graphics.device, &self.graphics.config);
         }
     }
 
     pub(crate) fn update(&mut self, dt: Duration) {
-        self.camera_controller.update_camera(&mut self.camera, dt);
-        self.camera_uniform.update_view_proj(&self.camera, &self.projection);
+        self.camera.update();
+        self.camera_uniform.update_view_proj(&self.camera);
         self.graphics.queue.write_buffer(
             &self.camera_buffer,
             0,

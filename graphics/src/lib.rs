@@ -14,9 +14,12 @@ mod graphics;
 mod pipeline;
 mod vertex;
 mod camera;
+mod quad;
+mod coord;
+mod instance;
 
-const VERTICES: &[Vertex] = &[
-    Vertex { position: [-0.0868241, 0.49240386, 0.0], tex_coords: [0.4131759, 0.00759614], },
+/*const VERTICES: &[Vertex] = &[
+    Vertex { position: [-0.0168241, 0.49240386, 0.0], tex_coords: [0.4131759, 0.00759614], },
     Vertex { position: [-0.49513406, 0.06958647, 0.0], tex_coords: [0.0048659444, 0.43041354], },
     Vertex { position: [-0.21918549, -0.44939706, 0.0], tex_coords: [0.28081453, 0.949397], },
     Vertex { position: [0.35966998, -0.3473291, 0.0], tex_coords: [0.85967, 0.84732914], },
@@ -27,6 +30,39 @@ const INDICES: &[u16] = &[
     0, 1, 4,
     1, 2, 4,
     2, 3, 4
+];*/
+
+/*const VERTICES: &[Vertex] = &[
+    // TL
+    Vertex { position: [-0.5, 0.5, 0.0], tex_coords: [0.0, 0.0], },
+    // TR
+    Vertex { position: [0.5, 0.5, 0.0], tex_coords: [1.0, 0.0], },
+    // BL
+    Vertex { position: [-0.5, -0.5, 0.0], tex_coords: [0.0, 1.0], },
+    // BR
+    Vertex { position: [0.5, -0.5, 0.0], tex_coords: [1.0, 1.0], }
+];
+
+const INDICES: &[u16] = &[
+    0, 1, 2,
+    3, 2, 1
+];*/
+
+
+const VERTICES: &[Vertex] = &[
+    // TL
+    Vertex { position: [-0.5, 0.5, 0.0], tex_coords: [0.0, 0.0] },
+    // TR
+    Vertex { position: [0.5, 0.5, 0.0], tex_coords: [1.0, 0.0] },
+    // BL
+    Vertex { position: [-0.5, -0.5, 0.0], tex_coords: [0.0, 1.0] },
+    // BR
+    Vertex { position: [0.5, -0.5, 0.0], tex_coords: [1.0, 1.0] }
+];
+
+const INDICES: &[u16] = &[
+    0, 2, 3,
+    3, 1, 0
 ];
 
 pub async fn run() {
@@ -42,7 +78,7 @@ pub async fn run() {
                 event: winit::event::DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
             } => if state.mouse_pressed {
-                state.camera_controller.process_mouse(delta.0, delta.1)
+                state.camera.controller.process_mouse_motion(&delta)
             }
             Event::WindowEvent {
                 ref event,
