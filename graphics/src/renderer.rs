@@ -83,7 +83,7 @@ impl Renderer {
         // END CAMERA
 
 
-        let instances = vec![Quad::new(Coord3DI::new(0, 0, 0), Rotation::Front, 0)];
+        let instances = vec![Quad::new(Coord3DI::new(0, -2, 0), Rotation::Front, 0), Quad::new(Coord3DI::new(0, -2, 0), Rotation::Up, 0)];
 
         let instance_data = instances.iter().map(|instance| -> InstanceRaw { instance.to_raw() }).collect::<Vec<_>>();
         let instance_buffer = graphics.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

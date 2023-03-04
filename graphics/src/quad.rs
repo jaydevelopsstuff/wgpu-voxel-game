@@ -30,26 +30,26 @@ impl Quad  {
     pub fn new(pos: Coord3DI, facing: Rotation, texture_index: u32) -> Self {
         let rotation: Rotation3<f32>;
         match facing {
-            UP => {
+            Rotation::Up => {
                 let rot: f32 = -90.;
                 rotation = Rotation3::from_euler_angles(rot.to_radians(), 0., 0.);
             }
-            DOWN => {
+            Rotation::Down => {
                 let rot: f32 = 90.;
                 rotation = Rotation3::from_euler_angles(rot.to_radians(), 0., 0.);
             }
-            LEFT => {
+            Rotation::Left => {
                 let rot: f32 = -90.;
                 rotation = Rotation3::from_euler_angles(0., rot.to_radians(), 0.);
             }
-            RIGHT => {
+            Rotation::Right => {
                 let rot: f32 = 90.;
                 rotation = Rotation3::from_euler_angles(0., rot.to_radians(), 0.);
             }
-            FRONT => {
+            Rotation::Front => {
                 rotation = Rotation3::from_euler_angles(0., 0., 0.);
             }
-            BACK => {
+            Rotation::Back => {
                 let rot: f32 = 180.;
                 rotation = Rotation3::from_euler_angles(0., rot.to_radians(), 0.);
             }
