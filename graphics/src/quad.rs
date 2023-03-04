@@ -22,8 +22,8 @@ pub(crate) const INDICES: &[u16] = &[
 #[derive(Debug)]
 pub struct Quad {
     pub position: Translation3<f32>,
-    rotation: Rotation3<f32>,
-    texture_index: u32
+    pub(crate) rotation: Rotation3<f32>,
+    pub(crate) texture_index: u32
 }
 
 impl Quad  {

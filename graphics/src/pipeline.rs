@@ -1,4 +1,5 @@
 use crate::graphics::Graphics;
+use crate::instance::InstanceRaw;
 
 pub struct Pipeline {
     pub pipeline: wgpu::RenderPipeline
@@ -24,7 +25,7 @@ impl Pipeline {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[vertex_layout]
+                buffers: &[vertex_layout, InstanceRaw::init_buffer_layout()]
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,

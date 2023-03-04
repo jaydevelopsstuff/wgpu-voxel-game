@@ -1,14 +1,17 @@
 use std::time::Duration;
 use log::{info, debug};
-use wgpu::{Instance, Surface, Adapter, Device, Queue};
+use nalgebra::{Quaternion, Rotation3, Translation3, Vector3};
+use wgpu::{Instance, Surface, Adapter, Device, Queue, Face};
 use wgpu::util::DeviceExt;
 use winit::{window::Window, event::WindowEvent, dpi::PhysicalSize};
 use winit::event::{ElementState, KeyboardInput, MouseButton};
 use crate::{INDICES, quad, Vertex, VERTICES};
 use crate::camera::{Camera, CameraController, CameraUniform};
+use crate::coord::Coord3DI;
 use crate::graphics::Graphics;
+use crate::instance::InstanceRaw;
 use crate::pipeline::Pipeline;
-use crate::quad::Quad;
+use crate::quad::{Quad, Rotation};
 use crate::texture::Texture;
 
 pub(crate) struct Renderer {
@@ -25,6 +28,8 @@ pub(crate) struct Renderer {
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
+    instances: Vec<Quad>,
+    instance_buffer: wgpu::Buffer,
     pub(crate) mouse_pressed: bool
 }
 
@@ -77,6 +82,15 @@ impl Renderer {
         });
         // END CAMERA
 
+
+        let instances = vec![Quad::new(Coord3DI::new(0, 0, 0), Rotation::Front, 0)];
+
+        let instance_data = instances.iter().map(|instance| -> InstanceRaw { instance.to_raw() }).collect::<Vec<_>>();
+        let instance_buffer = graphics.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Instance Buffer"),
+            contents: bytemuck::cast_slice(&instance_data),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
 
         let texture_bind_group_layout =
             graphics.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -170,6 +184,8 @@ impl Renderer {
             camera_uniform,
             camera_buffer,
             camera_bind_group,
+            instances,
+            instance_buffer,
             mouse_pressed: false
         }
     }
@@ -258,9 +274,10 @@ impl Renderer {
 
             render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+            render_pass.draw_indexed(0..self.num_indices, 0, 0..self.instances.len() as _);
         }
     
         // submit will accept anything that implements IntoIter
