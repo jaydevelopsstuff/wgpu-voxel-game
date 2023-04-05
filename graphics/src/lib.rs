@@ -17,7 +17,7 @@ mod camera;
 mod quad;
 mod coord;
 mod instance;
-mod cube;
+// mod cube;
 
 pub async fn run() {
     let event_loop: EventLoop<()> = EventLoop::new();
