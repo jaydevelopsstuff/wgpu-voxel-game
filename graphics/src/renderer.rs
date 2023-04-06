@@ -58,10 +58,8 @@ impl Renderer {
 
         let mut instance_data = vec![];
 
-        for b in block_map.iter() {
-            for i in b.get_faces().iter() {
-                instance_data.push(i.to_raw());
-            }
+        for quad in block_map.quads() {
+            instance_data.push(quad.to_raw());
         }
 
         let instance_buffer = graphics.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

@@ -1,4 +1,6 @@
+use std::slice::Iter;
 use crate::block::block_vector::BlockVector;
+use crate::quad::Quad;
 
 pub struct BlockMap {
     vectors: Vec<BlockVector>,
@@ -35,7 +37,11 @@ impl BlockMap {
         len
     }
 
-    pub fn iter(&self) -> std::slice::Iter<'_, BlockVector> {
+    pub fn iter(&self) -> Iter<'_, BlockVector> {
         self.vectors.iter()
+    }
+
+    pub fn quads(&self) -> Vec<&Quad> {
+        self.vectors.iter().flat_map(|vector| vector.get_faces().iter()).collect::<Vec<&Quad>>()
     }
 }
