@@ -1,10 +1,9 @@
 use std::time::Instant;
 use renderer::Renderer;
-use wgpu::util::DeviceExt;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    window::{WindowBuilder, Window},
+    window::{Window, WindowBuilder},
 };
 use crate::vertex::Vertex;
 
@@ -14,9 +13,8 @@ mod graphics;
 mod pipeline;
 mod vertex;
 mod camera;
-mod quad;
-mod coord;
 mod instance;
+pub mod quad;
 // mod cube;
 
 pub async fn run() {

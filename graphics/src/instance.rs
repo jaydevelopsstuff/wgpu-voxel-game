@@ -1,5 +1,3 @@
-use nalgebra::{Matrix4, Quaternion, Translation3};
-
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct InstanceRaw {

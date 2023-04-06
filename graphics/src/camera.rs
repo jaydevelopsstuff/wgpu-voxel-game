@@ -1,5 +1,7 @@
 use nalgebra::{Matrix4, Point3, Vector3};
-use winit::event::{DeviceEvent, ElementState, KeyboardInput, MouseScrollDelta, VirtualKeyCode};
+use wgpu::{BindGroup, BindGroupLayout, Buffer};
+use wgpu::util::DeviceExt;
+use winit::event::{ElementState, MouseScrollDelta, VirtualKeyCode};
 use crate::graphics::Graphics;
 
 pub struct Camera {
@@ -25,6 +27,7 @@ const OPENGL_TO_WGPU_MATRIX: Matrix4<f32> = Matrix4::new(
 impl Camera {
     pub fn new(graphics: &Graphics) -> Self {
         let controller = CameraController::new();
+
         Self {
             eye: Point3::new(0., 0., 1.),
             target: Point3::new(0., 0., -1.),
@@ -36,6 +39,48 @@ impl Camera {
             controller,
             global_matrix: OPENGL_TO_WGPU_MATRIX,
         }
+    }
+
+    pub(crate) fn bind(&self, graphics: &Graphics) -> (CameraUniform, Buffer, BindGroup, BindGroupLayout) {
+        let mut uniform = CameraUniform::new();
+        uniform.update_view_proj(&self);
+
+        let buffer = graphics.device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Camera Buffer"),
+                contents: bytemuck::cast_slice(&[uniform]),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            }
+        );
+
+        let bind_group_layout = graphics.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }
+            ],
+            label: Some("camera_bind_group_layout"),
+        });
+
+        let bind_group = graphics.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: buffer.as_entire_binding(),
+                }
+            ],
+            label: Some("camera_bind_group"),
+        });
+
+        (uniform, buffer, bind_group, bind_group_layout)
     }
 
     pub fn update_global_matrix(&mut self) {
@@ -173,7 +218,6 @@ pub struct CameraUniform {
 
 impl CameraUniform {
     pub fn new() -> Self {
-        use nalgebra::SquareMatrix;
         Self {
             view_proj: Matrix4::identity().into(),
         }

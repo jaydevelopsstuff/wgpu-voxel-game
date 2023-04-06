@@ -1,20 +1,18 @@
 use std::num::NonZeroU32;
 use std::time::Duration;
-use log::{info, debug};
-use nalgebra::{Quaternion, Rotation3, Translation3, Vector3};
-use wgpu::{Instance, Surface, Adapter, Device, Queue, Face};
 use wgpu::BindingResource::TextureViewArray;
 use crate::texture::Texture;
 use wgpu::util::DeviceExt;
-use winit::{window::Window, event::WindowEvent, dpi::PhysicalSize};
+use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 use winit::event::{ElementState, KeyboardInput, MouseButton};
-use crate::{quad, Vertex};
-use crate::camera::{Camera, CameraController, CameraUniform};
-use crate::coord::{Coord3DF, Coord3DI};
+use math::block::block_vector::BlockVector;
+use math::block::block_map::BlockMap;
+use crate::quad;
+use crate::Vertex;
+use crate::camera::{Camera, CameraUniform};
 use crate::graphics::Graphics;
-use crate::instance::InstanceRaw;
 use crate::pipeline::Pipeline;
-use crate::quad::{Quad, Rotation};
+use crate::quad::Raw;
 
 pub(crate) struct Renderer {
     window: Window,
@@ -31,9 +29,9 @@ pub(crate) struct Renderer {
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
-    instances: Vec<Quad>,
+    block_map: BlockMap,
     instance_buffer: wgpu::Buffer,
-    pub(crate) mouse_pressed: bool
+    pub(crate) mouse_pressed: bool,
 }
 
 impl Renderer {
@@ -47,62 +45,25 @@ impl Renderer {
 
         let depth_texture = Texture::create_depth_texture(&graphics.device, &graphics.config, "depth_texture");
 
-        // START CAMERA
         let camera = Camera::new(&graphics);
-        let mut camera_uniform = CameraUniform::new();
-        camera_uniform.update_view_proj(&camera);
+        let (camera_uniform, camera_buffer, camera_bind_group, camera_bind_group_layout) = camera.bind(&graphics);
 
-        let camera_buffer = graphics.device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Camera Buffer"),
-                contents: bytemuck::cast_slice(&[camera_uniform]),
-                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
-            }
-        );
+        let mut block_map: BlockMap = BlockMap::new();
 
-        let camera_bind_group_layout = graphics.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                }
-            ],
-            label: Some("camera_bind_group_layout"),
-        });
-
-        let camera_bind_group = graphics.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &camera_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: camera_buffer.as_entire_binding(),
-                }
-            ],
-            label: Some("camera_bind_group"),
-        });
-        // END CAMERA
-
-
-        let mut instances = vec![];
-
-        for i in 0..50 {
-            for j in 0..50 {
-                instances.push(Quad::new(Coord3DF::new((i) as f32 + 0.0, 0.0, (j) as f32 + 0.5), Rotation::Front, 0));
-                instances.push(Quad::new(Coord3DF::new((i) as f32 + 0.0, 0.0, (j) as f32 + -0.5), Rotation::Back, 0));
-                instances.push(Quad::new(Coord3DF::new((i) as f32 + -0.5, 0.0, (j) as f32 + 0.0), Rotation::Left, 0));
-                instances.push(Quad::new(Coord3DF::new((i) as f32 + 0.5, 0.0, (j) as f32 + 0.0), Rotation::Right, 0));
-                instances.push(Quad::new(Coord3DF::new((i) as f32 + 0.0, 0.5, (j) as f32 + 0.0), Rotation::Up, 1));
-                instances.push(Quad::new(Coord3DF::new((i) as f32 + 0.0, -0.5, (j) as f32 + 0.0), Rotation::Down, 2));
+        for i in 0..10 {
+            for j in 0..10 {
+                block_map.push(BlockVector::new(i, j, [Some(0), Some(0), Some(0), Some(0), Some(1), Some(2)]));
             }
         }
 
-        let instance_data = instances.iter().map(|instance| -> InstanceRaw { instance.to_raw() }).collect::<Vec<_>>();
+        let mut instance_data = vec![];
+
+        for b in block_map.iter() {
+            for i in b.get_faces().iter() {
+                instance_data.push(i.to_raw());
+            }
+        }
+
         let instance_buffer = graphics.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Instance Buffer"),
             contents: bytemuck::cast_slice(&instance_data),
@@ -140,22 +101,21 @@ impl Renderer {
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
-                        resource: wgpu::BindingResource::Sampler(&grass_side_diffuse_texture.sampler)
+                        resource: wgpu::BindingResource::Sampler(&grass_side_diffuse_texture.sampler),
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
-                        resource: wgpu::BindingResource::TextureViewArray(vec![&grass_side_diffuse_texture.view, &grass_top_diffuse_texture.view, &dirt_diffuse_texture.view].as_ref())
+                        resource: TextureViewArray(vec![&grass_side_diffuse_texture.view, &grass_top_diffuse_texture.view, &dirt_diffuse_texture.view].as_ref()),
                     }
                 ],
-                label: Some("diffuse_bind_group")
+                label: Some("diffuse_bind_group"),
             }
         );
-
 
         let render_pipeline_layout = graphics.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
             bind_group_layouts: &[&texture_bind_group_layout, &camera_bind_group_layout],
-            push_constant_ranges: &[]
+            push_constant_ranges: &[],
         });
 
         let render_pipeline = Pipeline::new(
@@ -164,14 +124,14 @@ impl Renderer {
             "Main",
             include_str!("shaders/shader.wgsl"),
             Vertex::init_buffer_layout(),
-            Some(&render_pipeline_layout)
+            Some(&render_pipeline_layout),
         );
 
         let vertex_buffer = graphics.device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
                 contents: bytemuck::cast_slice(quad::VERTICES),
-                usage: wgpu::BufferUsages::VERTEX
+                usage: wgpu::BufferUsages::VERTEX,
             }
         );
 
@@ -185,7 +145,6 @@ impl Renderer {
 
         let num_vertices = quad::VERTICES.len() as u32;
         let num_indices = quad::INDICES.len() as u32;
-
 
         Self {
             window,
@@ -202,9 +161,9 @@ impl Renderer {
             camera_uniform,
             camera_buffer,
             camera_bind_group,
-            instances,
+            block_map,
             instance_buffer,
-            mouse_pressed: false
+            mouse_pressed: false,
         }
     }
 
@@ -303,13 +262,13 @@ impl Renderer {
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..self.instances.len() as _);
+            render_pass.draw_indexed(0..self.num_indices, 0, 0..self.block_map.quad_len() as _);
         }
-    
+
         // submit will accept anything that implements IntoIter
         self.graphics.queue.submit(std::iter::once(encoder.finish()));
         output.present();
-    
+
         Ok(())
     }
 }
