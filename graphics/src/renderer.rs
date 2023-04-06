@@ -52,9 +52,11 @@ impl Renderer {
 
         for i in 0..10 {
             for j in 0..10 {
-                block_map.push(BlockVector::new(i, j, [Some(0), Some(0), Some(0), Some(0), Some(1), Some(2)]));
+                block_map.push(BlockVector::new(i, 0,j, [Some(0), Some(0), Some(0), Some(0), Some(1), Some(2)]));
             }
         }
+
+        block_map.push(BlockVector::new(11, 2,11, [Some(0), Some(0), Some(0), Some(0), Some(1), Some(2)]));
 
         let mut instance_data = vec![];
 
