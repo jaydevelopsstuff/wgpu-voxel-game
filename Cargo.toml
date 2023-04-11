@@ -2,6 +2,7 @@
 resolver = "2" # For some reason, this is still needed for macOS on the 2021 edition
 members = [
     "game",
+    "world",
     "math",
     "graphics"
 ]
