@@ -7,7 +7,7 @@ use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 use winit::event::{ElementState, KeyboardInput, MouseButton};
 use math::block::block_vector::BlockVector;
 use math::block::block_map::BlockMap;
-use math::coord::Coord2DI;
+use math::coord::{Coord2DI, Coord3DI};
 use math::seed::Seed;
 use world::chunk::{Chunk, ChunkGenerator, VanillaGenerator};
 use crate::quad;
@@ -56,8 +56,9 @@ impl Renderer {
         let chunk: Chunk = VanillaGenerator::new(Seed::random().get()).generate_chunk(Coord2DI::new(0, 0));
 
         for block in chunk.blocks {
-            block_map.push(block.vector);
+            block_map.push(block.to_vector([true, true, true, true, true, true]));
         }
+
 
         let mut instance_data = vec![];
 
