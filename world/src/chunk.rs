@@ -2,6 +2,7 @@ use log::error;
 use noise::{NoiseFn, Perlin};
 
 use math::{CHUNK_HEIGHT, CHUNK_SIZE};
+use math::block::block_vector::BlockVector;
 use math::coord::{Coord2DI, Coord3DI, index};
 
 use crate::block::Block;
