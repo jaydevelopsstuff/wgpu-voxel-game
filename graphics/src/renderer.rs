@@ -7,7 +7,7 @@ use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 use winit::event::{ElementState, KeyboardInput, MouseButton};
 
 use math::block::block_map::BlockMap;
-use math::coord::Point2DI;
+use math::point::Point2DI;
 use math::seed::Seed;
 use world::chunk::{Chunk, ChunkGenerator, VanillaGenerator};
 

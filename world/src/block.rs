@@ -1,5 +1,5 @@
 use math::block::block_vector::BlockVector;
-use math::coord::Coord3DI;
+use math::point::Coord3DI;
 use crate::material::Material;
 
 pub struct Block {

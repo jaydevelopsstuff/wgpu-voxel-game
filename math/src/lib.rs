@@ -1,5 +1,5 @@
 pub mod block;
-pub mod coord;
+pub mod point;
 pub mod face;
 pub mod quad;
 pub mod seed;

@@ -1,4 +1,4 @@
-use crate::coord::{Coord3DF, Coord3DI};
+use crate::point::{Coord3DF, Coord3DI};
 use crate::face::Face;
 use crate::quad::Quad;
 

@@ -1,6 +1,6 @@
 use nalgebra::Rotation3;
 
-use crate::coord::Point3DF;
+use crate::point::Point3DF;
 use crate::face::Face;
 
 #[derive(Clone, Debug)]
