@@ -725,6 +725,7 @@ version = "0.1.0"
 dependencies = [
  "log",
  "nalgebra",
+ "num-traits",
 ]
 
 [[package]]
@@ -1723,6 +1724,7 @@ dependencies = [
  "env_logger",
  "graphics",
  "log",
+ "math",
  "pollster",
 ]
 
