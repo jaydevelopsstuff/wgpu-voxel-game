@@ -1,3 +1,4 @@
+use nalgebra::Translation3;
 use math::quad::Quad;
 
 use crate::instance::InstanceRaw;
@@ -25,7 +26,8 @@ pub trait Raw {
 
 impl Raw for Quad {
     fn to_raw(&self) -> InstanceRaw {
-        let t_matrix: [[f32; 4]; 4] = (self.position.to_homogeneous() * self.rotation.matrix().to_homogeneous()).into();
+        let translation = Translation3::from([self.pos.x.clone(), self.pos.y.clone(), self.pos.z.clone()]);
+        let t_matrix: [[f32; 4]; 4] = (translation.to_homogeneous() * self.rot.matrix().to_homogeneous()).into();
         InstanceRaw {
             model: t_matrix,
             texture_index: self.texture_index,
