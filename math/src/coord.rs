@@ -1,4 +1,3 @@
-use std::ops::{Add, Index, Sub};
 use num_traits::{Num, ToPrimitive};
 
 pub trait Point: Num + ToPrimitive {}
@@ -12,6 +11,11 @@ impl Point for i32 {}
 impl Point for u32 {}
 
 impl Point for f32 {}
+
+pub fn index<T: Point>(x: &T, y: &T, z: &T) -> usize {
+    // flatten x, y, z into a single index for an array with an unknown length
+    ((y.to_i32().unwrap() << 8) | (z.to_i32().unwrap() << 4) | x.to_i32().unwrap()) as usize
+}
 
 #[derive(Clone, Copy, Debug)]
 pub struct Coord2<T: Point> {
@@ -40,7 +44,7 @@ impl<T: Point> Coord3<T> {
 
 impl<T: Point> Indexable for Coord3<T> {
     fn index(&self) -> usize {
-        ((self.x.to_i32().unwrap() << 16) + (self.y.to_i32().unwrap() << 8) + self.z.to_i32().unwrap()) as usize
+        index(&self.x, &self.y, &self.z)
     }
 }
 
