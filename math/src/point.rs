@@ -76,8 +76,8 @@ impl<T: Point<T>> Indexable for Point3<T> {
 impl<'a, A: Point<A> + 'static, T: Point<T> > LossyCast<Point2<A>> for Point2<T> {
     fn cast(&self) -> Point2<A> {
         Point2 {
-            x: try_cast(self.x.clone()).unwrap(),
-            y: try_cast(self.y.clone()).unwrap(),
+            x: try_cast(self.x.clone()).expect("Failed to cast x"),
+            y: try_cast(self.y.clone()).expect("Failed to cast y"),
         }
     }
 }
@@ -85,9 +85,9 @@ impl<'a, A: Point<A> + 'static, T: Point<T> > LossyCast<Point2<A>> for Point2<T>
 impl<A: Point<A> + From<T>, T: Point<T>> LossyCast<Point3<A>> for Point3<T> {
     fn cast(&self) -> Point3<A> {
         Point3 {
-            x: <T as Into<A>>::into(self.x.clone()),
-            y: <T as Into<A>>::into(self.y.clone()),
-            z: <T as Into<A>>::into(self.z.clone())
+            x: try_cast(self.x.clone()).expect("Failed to cast x"),
+            y: try_cast(self.x.clone()).expect("Failed to cast y"),
+            z: try_cast(self.x.clone()).expect("Failed to cast z")
         }
     }
 }
