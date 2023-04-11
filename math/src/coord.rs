@@ -1,4 +1,5 @@
 use num_traits::{Num, ToPrimitive};
+use crate::{CHUNK_HEIGHT, CHUNK_SIZE};
 
 pub trait Point: Num + ToPrimitive {}
 
