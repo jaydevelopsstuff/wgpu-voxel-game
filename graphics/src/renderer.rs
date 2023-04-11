@@ -7,6 +7,9 @@ use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 use winit::event::{ElementState, KeyboardInput, MouseButton};
 use math::block::block_vector::BlockVector;
 use math::block::block_map::BlockMap;
+use math::coord::Coord2DI;
+use math::seed::Seed;
+use world::chunk::{Chunk, ChunkGenerator, VanillaGenerator};
 use crate::quad;
 use crate::Vertex;
 use crate::camera::{Camera, CameraUniform};
@@ -50,13 +53,11 @@ impl Renderer {
 
         let mut block_map: BlockMap = BlockMap::new();
 
-        for i in 0..10 {
-            for j in 0..10 {
-                block_map.push(BlockVector::new(i, 0,j, [Some(0), Some(0), Some(0), Some(0), Some(1), Some(2)]));
-            }
-        }
+        let chunk: Chunk = VanillaGenerator::new(Seed::random().get()).generate_chunk(Coord2DI::new(0, 0));
 
-        block_map.push(BlockVector::new(11, 2,11, [Some(0), Some(0), Some(0), Some(0), Some(1), Some(2)]));
+        for block in chunk.blocks {
+            block_map.push(block.vector);
+        }
 
         let mut instance_data = vec![];
 
