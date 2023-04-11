@@ -1,18 +1,18 @@
-use nalgebra::{Rotation3, Translation3};
+use nalgebra::Rotation3;
 
-use crate::coord::Coord3DF;
+use crate::coord::Point3DF;
 use crate::face::Face;
 
 #[derive(Clone, Debug)]
 pub struct Quad {
     pub facing: Face,
-    pub position: Translation3<f32>,
-    pub rotation: Rotation3<f32>,
+    pub pos: Point3DF,
+    pub rot: Rotation3<f32>,
     pub texture_index: u32,
 }
 
 impl Quad {
-    pub fn new(pos: Coord3DF, facing: Face, texture_index: u32) -> Self {
+    pub fn new(position: Point3DF, facing: Face, texture_index: u32) -> Self {
         let rotation: Rotation3<f32>;
         match facing {
             Face::Up => {
@@ -41,8 +41,8 @@ impl Quad {
         }
         Quad {
             facing,
-            position: Translation3::from([pos.x as f32, pos.y as f32, pos.z as f32]),
-            rotation,
+            pos: position,
+            rot: rotation,
             texture_index,
         }
     }
