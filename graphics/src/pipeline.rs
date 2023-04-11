@@ -3,7 +3,7 @@ use crate::instance::InstanceRaw;
 use crate::texture::Texture;
 
 pub struct Pipeline {
-    pub pipeline: wgpu::RenderPipeline
+    pub pipeline: wgpu::RenderPipeline,
 }
 
 impl Pipeline {
@@ -13,7 +13,7 @@ impl Pipeline {
         shader_label: &str,
         shader_content: &str,
         vertex_layout: wgpu::VertexBufferLayout,
-        layout: Option<&wgpu::PipelineLayout>
+        layout: Option<&wgpu::PipelineLayout>,
     ) -> Self {
         // Consider reading shaders at runtime?
         let shader = graphics.device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -27,7 +27,7 @@ impl Pipeline {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[vertex_layout, InstanceRaw::init_buffer_layout()]
+                buffers: &[vertex_layout, InstanceRaw::init_buffer_layout()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -35,8 +35,8 @@ impl Pipeline {
                 targets: &[Some(wgpu::ColorTargetState {
                     format: graphics.config.format,
                     blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL
-                })]
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
             }),
             primitive: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleList,
@@ -48,7 +48,7 @@ impl Pipeline {
                 // Requires Features::DEPTH_CLIP_CONTROL
                 unclipped_depth: false,
                 // Requires Features::CONSERVATIVE_RASTERIZATION
-                conservative: false
+                conservative: false,
             },
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: Texture::DEPTH_FORMAT,
@@ -60,9 +60,9 @@ impl Pipeline {
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,
-                alpha_to_coverage_enabled: false
+                alpha_to_coverage_enabled: false,
             },
-            multiview: None
+            multiview: None,
         });
 
         Self {

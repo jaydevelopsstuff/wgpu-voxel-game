@@ -13,7 +13,6 @@ impl Seed {
     }
 
     pub fn get(&self) -> u32 {
-        println!("Seed: {}", self.0);
         self.0
     }
 }

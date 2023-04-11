@@ -1,14 +1,16 @@
 use log::error;
 use noise::{NoiseFn, Perlin};
-use math::block::block_vector::BlockVector;
+
 use math::{CHUNK_HEIGHT, CHUNK_SIZE};
+use math::block::block_vector::BlockVector;
 use math::coord::{Coord2DI, Coord3DI, index};
+
 use crate::block::Block;
 use crate::material::{DIRT, GRASS};
 
 pub struct Chunk {
     pub pos: Coord2DI,
-    pub blocks: Vec<Block>
+    pub blocks: Vec<Block>,
 }
 
 impl Chunk {
@@ -22,7 +24,7 @@ pub trait ChunkGenerator {
 }
 
 pub struct VanillaGenerator {
-    noise: Vec<f64>
+    noise: Vec<f64>,
 }
 
 impl VanillaGenerator {
@@ -37,8 +39,6 @@ impl VanillaGenerator {
                 }
             }
         }
-
-        println!("Noise length: {}", noise.len());
 
         Self {
             noise
@@ -72,22 +72,22 @@ impl ChunkGenerator for VanillaGenerator {
                     let noise = self.get_noise(xi, yi, zi);
 
                     if noise < &0.0 {
+                        // Air
                         continue;
                     }
-
 
                     // Check if the block above is air
                     if self.get_noise(xi, yi + 1, zi) < &0.0 {
                         // Grass block
                         blocks.push(Block {
                             pos,
-                            material: GRASS
+                            material: GRASS,
                         });
                     } else {
                         // Dirt block
                         blocks.push(Block {
                             pos,
-                            material: DIRT
+                            material: DIRT,
                         });
                     }
                 }
@@ -95,7 +95,7 @@ impl ChunkGenerator for VanillaGenerator {
         }
         Chunk {
             pos,
-            blocks
+            blocks,
         }
     }
 }

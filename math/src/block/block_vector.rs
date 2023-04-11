@@ -1,6 +1,6 @@
 use crate::coord::{Coord3DF, Coord3DI};
-use crate::quad::Quad;
 use crate::face::Face;
+use crate::quad::Quad;
 
 const OFFSETS: [[f32; 3]; 6] = [
     [0., 0.5, 0.],
@@ -27,8 +27,6 @@ pub struct BlockVector {
     pos: Coord3DI,
     faces: Vec<Quad>,
 }
-
-
 
 impl BlockVector {
     pub fn new(
@@ -73,7 +71,7 @@ impl BlockVector {
 
         Self {
             pos,
-            faces
+            faces,
         }
     }
 
@@ -92,7 +90,7 @@ impl BlockVector {
                 if !set {
                     self.faces.push(create_quad(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32, face, texture));
                 }
-            },
+            }
             None => {
                 self.faces.retain(|f| f.facing != face);
             }

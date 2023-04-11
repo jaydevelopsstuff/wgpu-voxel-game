@@ -12,4 +12,3 @@ impl Block {
         self.material.to_vector(self.pos, faces)
     }
 }
-

@@ -1,21 +1,24 @@
 use std::num::NonZeroU32;
 use std::time::Duration;
+
 use wgpu::BindingResource::TextureViewArray;
-use crate::texture::Texture;
 use wgpu::util::DeviceExt;
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 use winit::event::{ElementState, KeyboardInput, MouseButton};
-use math::block::block_vector::BlockVector;
+
 use math::block::block_map::BlockMap;
+use math::block::block_vector::BlockVector;
 use math::coord::{Coord2DI, Coord3DI};
 use math::seed::Seed;
 use world::chunk::{Chunk, ChunkGenerator, VanillaGenerator};
-use crate::quad;
-use crate::Vertex;
+
 use crate::camera::{Camera, CameraUniform};
 use crate::graphics::Graphics;
 use crate::pipeline::Pipeline;
+use crate::quad;
 use crate::quad::Raw;
+use crate::texture::Texture;
+use crate::Vertex;
 
 pub(crate) struct Renderer {
     window: Window,
@@ -58,7 +61,6 @@ impl Renderer {
         for block in chunk.blocks {
             block_map.push(block.to_vector([true, true, true, true, true, true]));
         }
-
 
         let mut instance_data = vec![];
 
