@@ -3,7 +3,7 @@ use math::coord::Coord3DI;
 use math::face::Face;
 
 pub struct Material {
-    textures: [u32; 6]
+    textures: [u32; 6],
 }
 
 impl Material {

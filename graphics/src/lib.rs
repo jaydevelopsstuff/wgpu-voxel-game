@@ -1,10 +1,13 @@
 use std::time::Instant;
-use renderer::Renderer;
+
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::{Window, WindowBuilder},
 };
+
+use renderer::Renderer;
+
 use crate::vertex::Vertex;
 
 mod renderer;
@@ -27,7 +30,7 @@ pub async fn run() {
     event_loop.run(move |event, _, control_flow| {
         match event {
             Event::DeviceEvent {
-                event: winit::event::DeviceEvent::MouseMotion{ delta, },
+                event: winit::event::DeviceEvent::MouseMotion { delta, },
                 .. // We're not using device_id currently
             } => if state.mouse_pressed {
                 state.camera.controller.process_mouse_motion(&delta)
@@ -41,11 +44,11 @@ pub async fn run() {
                         WindowEvent::CloseRequested
                         | WindowEvent::KeyboardInput {
                             input:
-                                KeyboardInput {
-                                    state: ElementState::Pressed,
-                                    virtual_keycode: Some(VirtualKeyCode::Escape),
-                                    ..
-                                },
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                ..
+                            },
                             ..
                         } => *control_flow = ControlFlow::Exit,
                         WindowEvent::Resized(physical_size) => {

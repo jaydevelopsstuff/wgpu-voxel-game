@@ -1,4 +1,4 @@
-use rand::{random, Rng};
+use rand::random;
 
 pub struct Seed(u32);
 
@@ -13,7 +13,6 @@ impl Seed {
     }
 
     pub fn get(&self) -> u32 {
-        println!("Seed: {}", self.0);
         self.0
     }
 }

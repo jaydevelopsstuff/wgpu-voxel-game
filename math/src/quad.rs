@@ -1,8 +1,9 @@
 use nalgebra::{Rotation3, Translation3};
+
 use crate::coord::Coord3DF;
 use crate::face::Face;
 
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct Quad {
     pub facing: Face,
     pub position: Translation3<f32>,
