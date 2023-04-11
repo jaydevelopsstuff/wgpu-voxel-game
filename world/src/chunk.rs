@@ -1,11 +1,10 @@
 use log::error;
 use noise::{NoiseFn, Perlin};
 use math::block::block_vector::BlockVector;
+use math::{CHUNK_HEIGHT, CHUNK_SIZE};
 use math::coord::{Coord2DI, Coord3DI, index};
 use crate::block::Block;
-
-pub static CHUNK_SIZE: usize = 16;
-pub static CHUNK_HEIGHT: usize = 256;
+use crate::material::{DIRT, GRASS};
 
 pub struct Chunk {
     pub pos: Coord2DI,
@@ -68,24 +67,27 @@ impl ChunkGenerator for VanillaGenerator {
                     let yi = y as i32;
                     let zi = z as i32;
 
+                    let pos = Coord3DI::new(xi, yi, zi);
+
                     let noise = self.get_noise(xi, yi, zi);
 
                     if noise < &0.0 {
                         continue;
                     }
 
+
                     // Check if the block above is air
                     if self.get_noise(xi, yi + 1, zi) < &0.0 {
                         // Grass block
                         blocks.push(Block {
-                            pos: Coord3DI::new(xi, yi, zi),
-                            vector: BlockVector::new(xi, yi, zi, [Some(0), Some(0), Some(0), Some(0), Some(1), Some(2)])
+                            pos,
+                            material: GRASS
                         });
                     } else {
                         // Dirt block
                         blocks.push(Block {
-                            pos: Coord3DI::new(xi, yi, zi),
-                            vector: BlockVector::new(xi, yi, zi, [Some(2), Some(2), Some(2), Some(2), Some(2), Some(2)])
+                            pos,
+                            material: DIRT
                         });
                     }
                 }
